@@ -10,38 +10,39 @@
 using namespace std;
 
 /* A Person; they have a name and a SSN. */
-struct Person
-{
-  string name;
-  string SSN;
+struct Person {
+    string name;
+    string SSN;
 };
+
+std::ostream &operator<<( std::ostream &os, Person const &p ) {
+  return os << p.name << "(" << p.SSN << ")";
+}
 
 /* A database of Persons.
  * People can be looked up by database ID or by SSN.
  *
  * This database can be used concurrently by multiple threads.
  */
-class PeopleDB
-{
-  private:
+class PeopleDB {
+private:
     RWmutex mtx;
-    vector<string> SSNs; /* Databse ID -> SSN */
-    map<string,Person> SSN_to_Person; /* SSN -> Person object */
+    vector <string> SSNs; /* Databse ID -> SSN */
+    map <string, Person> SSN_to_Person; /* SSN -> Person object */
 
-  public:
+public:
 
     /* Adds a person to the database
      * and returns the Database ID for that Person.
      */
-    unsigned int addPerson(Person p)
-    {
-      
-      cout << "addPerson: " << endl;
+    unsigned int addPerson( Person p ) {
 
-      Wlock lock(mtx); // Hold a write lock until this function exits
+      cout << "addPerson: " << p << endl;
 
-      SSNs.push_back(p.SSN);
-      SSN_to_Person[p.SSN] = p;
+      Wlock lock( mtx ); // Hold a write lock until this function exits
+
+      SSNs.push_back( p.SSN );
+      SSN_to_Person[ p.SSN ] = p;
 
       return SSNs.size() - 1; // Index of new SSN in SSNs vector
     }
@@ -49,18 +50,16 @@ class PeopleDB
     /* Given a SSN, looks up the person in the database.
      * Throws a logic_error exception should the person not be present.
      */
-    Person getPersonBySSN(string ssn)
-    {
+    Person getPersonBySSN( string ssn ) {
 
-      cout << "getPersonBySSN: " << endl;
+      cout << "getPersonBySSN: " << ssn << endl;
 
-      Rlock lock(mtx); // Hold a read lock until this function exits
+      Rlock lock( mtx ); // Hold a read lock until this function exits
 
       // Look through the database and see if the person is present
-      auto result = SSN_to_Person.find(ssn);
-      if(result == SSN_to_Person.end())
-      {
-        throw logic_error("Invalid SSN");
+      auto result = SSN_to_Person.find( ssn );
+      if ( result == SSN_to_Person.end()) {
+        throw logic_error( "Invalid SSN" );
       }
 
       // Result is a std::pair with the key (ssn)
@@ -72,55 +71,47 @@ class PeopleDB
     /* Given a database ID, looks up the associated person in the database.
      * Throws a logic_error if the ID is not valid.
      */
-    Person getPersonByID(unsigned int id)
-    {
+    Person getPersonByID( unsigned int id ) {
 
-      cout << "getPersonByID: " << endl;
+      cout << "getPersonByID: " << id << endl;
 
-      Rlock lock(mtx); // Hold a read lock until this function exits
+      Rlock lock( mtx ); // Hold a read lock until this function exits
 
-      if(id >= SSNs.size())
-      {
-        throw logic_error("Invalid id");
+      if ( id >= SSNs.size()) {
+        throw logic_error( "Invalid id" );
       }
 
-      return getPersonBySSN(SSNs[id]);
+      return getPersonBySSN( SSNs[ id ] );
     }
 };
 
-void add(PeopleDB* db)
-{
+void add( PeopleDB *db ) {
 
   cout << "add: " << endl;
 
-  for(int i = 0; i < 100; i++)
-  {
-    Person p = {"bob", to_string(i)}; // Make up a name and SSN
-    db->addPerson(p);
+  for ( int i = 0; i < 100; i++ ) {
+    Person p = { "bob", to_string( i ) }; // Make up a name and SSN
+    db->addPerson( p );
   }
 }
 
-void get_one(PeopleDB* db)
-{
+void get_one( PeopleDB *db ) {
 
   cout << "get_one: " << endl;
 
-  for(int i = 0; i < 1000; i++)
-  {
-    try
-    {
-      db->getPersonByID(0);
+  for ( int i = 0; i < 1000; i++ ) {
+    try {
+      db->getPersonByID( 0 );
     }
-    catch (...) {} // what's a few exceptions among friends
+    catch ( ... ) {} // what's a few exceptions among friends
   }
 }
 
-int main()
-{
+int main() {
   PeopleDB db;
 
-  thread writer(add, &db); // Add 100 people to the database
-  thread reader(get_one, &db); // Repeatedly read from the database
+  thread writer( add, &db ); // Add 100 people to the database
+  thread reader( get_one, &db ); // Repeatedly read from the database
 
   writer.join();
   reader.join();
