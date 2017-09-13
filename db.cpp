@@ -35,6 +35,9 @@ class PeopleDB
      */
     unsigned int addPerson(Person p)
     {
+      
+      cout << "addPerson: " << endl;
+
       Wlock lock(mtx); // Hold a write lock until this function exits
 
       SSNs.push_back(p.SSN);
@@ -48,6 +51,9 @@ class PeopleDB
      */
     Person getPersonBySSN(string ssn)
     {
+
+      cout << "getPersonBySSN: " << endl;
+
       Rlock lock(mtx); // Hold a read lock until this function exits
 
       // Look through the database and see if the person is present
@@ -68,6 +74,9 @@ class PeopleDB
      */
     Person getPersonByID(unsigned int id)
     {
+
+      cout << "getPersonByID: " << endl;
+
       Rlock lock(mtx); // Hold a read lock until this function exits
 
       if(id >= SSNs.size())
@@ -81,6 +90,9 @@ class PeopleDB
 
 void add(PeopleDB* db)
 {
+
+  cout << "add: " << endl;
+
   for(int i = 0; i < 100; i++)
   {
     Person p = {"bob", to_string(i)}; // Make up a name and SSN
@@ -90,6 +102,9 @@ void add(PeopleDB* db)
 
 void get_one(PeopleDB* db)
 {
+
+  cout << "get_one: " << endl;
+
   for(int i = 0; i < 1000; i++)
   {
     try

@@ -6,7 +6,7 @@ LIBRARIES = -lpthread
 default: run
 
 run:
-	${CXX} ${CXXFLAGS} *.cpp ${LIBRARIES} -o program 
+	${CXX} ${CXXFLAGS} *.cpp ${LIBRARIES} -o bin/program 
 	
 clean:
-	rm -f *.o program
+	rm -f bin/*.o bin/program
